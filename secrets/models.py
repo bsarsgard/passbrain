@@ -5,8 +5,8 @@ from django.db import models
 
 class UserDevice(models.Model):
     user = models.ForeignKey('auth.User', related_name='devices')
-    device_id = models.CharField(max_length=1024)
-    device_name = models.CharField(max_length=100)
+    agent = models.CharField(max_length=1024)
+    name = models.CharField(max_length=100)
     public_key = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
     is_authorized = models.BooleanField(default=False)
@@ -18,9 +18,11 @@ class SecretGroup(models.Model):
                                    related_name='secretgroups')
 
 class SecretValue(models.Model):
-    secret = models.ForeignKey('Secret')
+    secret = models.ForeignKey('Secret', related_name='values')
     userdevice = models.ForeignKey('UserDevice')
-    value = models.TextField()
+    encrypted_key = models.CharField(max_length=1024)
+    encrypted_iv = models.CharField(max_length=1024)
+    encrypted_value = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
 
