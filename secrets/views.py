@@ -9,10 +9,14 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 
-from secrets.models import UserDevice
-from secrets.permissions import IsUserOrReadOnly
-from secrets.serializers import UserDeviceSerializer
-from secrets.serializers import UserSerializer
+from .models import UserDevice
+from .models import Secret
+from .models import SecretValue
+from .permissions import IsUserOrReadOnly
+from .serializers import UserDeviceSerializer
+from .serializers import UserSerializer
+from .serializers import SecretSerializer
+from .serializers import SecretValueSerializer
 
 
 @api_view(['GET'])
@@ -40,3 +44,15 @@ class UserDeviceViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+
+class SecretViewSet(viewsets.ModelViewSet):
+    queryset = Secret.objects.all()
+    serializer_class = SecretSerializer
+    permission_class = (permissions.IsAuthenticatedOrReadOnly)
+
+class SecretValueViewSet(viewsets.ModelViewSet):
+    queryset = SecretValue.objects.all()
+    serializer_class = SecretValueSerializer
+    permission_class = (permissions.IsAuthenticatedOrReadOnly,
+            IsUserOrReadOnly,)

@@ -9,6 +9,8 @@ from secrets import views
 router = DefaultRouter()
 router.register(r'userdevices', views.UserDeviceViewSet)
 router.register(r'users', views.UserViewSet)
+router.register(r'secrets', views.SecretViewSet)
+router.register(r'secretvalues', views.SecretValueViewSet)
 
 
 urlpatterns = [

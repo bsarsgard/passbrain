@@ -11,5 +11,3 @@ class SecretForm(forms.Form):
             widget=forms.TextInput(attrs={'class': 'form-control'}))
     value = forms.CharField(label='Value',
             widget=forms.Textarea(attrs={'class': 'form-control'}))
-    encrypted_value = forms.CharField(label='Encrypted Value',
-            widget=forms.Textarea(attrs={'class': 'form-control'}))

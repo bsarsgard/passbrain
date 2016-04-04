@@ -1,11 +1,15 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.template import loader
+from django.views.decorators.csrf import ensure_csrf_cookie
 
-from secrets.models import UserDevice, Secret
+from secrets.models import Secret
+from secrets.models import SecretValue
+from secrets.models import UserDevice
 from .forms import UserDeviceForm, SecretForm
 
 def index(request):
@@ -13,6 +17,9 @@ def index(request):
     context = {
     }
     return HttpResponse(template.render(context, request))
+
+def error(request):
+    return render(request, 'web/error.html')
 
 @login_required
 def sandbox(request):
@@ -68,6 +75,7 @@ def dashboard(request):
     return HttpResponse(template.render(context, request))
 
 @login_required
+@ensure_csrf_cookie
 def secrets(request):
     try:
         device = UserDevice.objects.get(user=request.user,
@@ -96,11 +104,23 @@ def secret_create(request):
     else:
         form = SecretForm()
     return render(request, 'web/secret_create.html',
-            {'form': form})
+            {'form': form, 'device': device})
 
 @login_required
 def secret_read(request, secret_id):
-    return render(request, 'web/secret_read.html')
+    try:
+        device = UserDevice.objects.get(user=request.user,
+                agent=request.META.get('HTTP_USER_AGENT', ''),
+                is_authorized=True,
+                is_active=True)
+    except:
+        return redirect('device')
+    secret = get_object_or_404(Secret, pk=secret_id)
+    secretvalue = SecretValue.objects.get(secret=secret,
+                userdevice=device,
+                is_active=True)
+    return render(request, 'web/secret_read.html',
+            {'secret': secret, 'device': device, 'secretvalue': secretvalue})
 
 @login_required
 def secret_update(request, secret_id):

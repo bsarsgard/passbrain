@@ -86,7 +86,7 @@
       else if (crypted) {
         var decrypted = crypt.decrypt(crypted);
         if (!decrypted)
-          decrypted = 'This is a test!';
+          decrypted = 'could not decrypt';
         $('#input').val(decrypted);
         $('#crypted').val('');
       }
