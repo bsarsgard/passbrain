@@ -29,3 +29,4 @@ class SecretValue(models.Model):
 class Secret(models.Model):
     label = models.CharField(max_length=100)
     groups = models.ManyToManyField('SecretGroup')
+    created = models.DateTimeField(auto_now_add=True)

@@ -84,9 +84,9 @@ def secrets(request):
                 is_active=True)
     except:
         return redirect('device')
-    secrets = Secret.objects.filter(values__userdevice=device)
+    secretvalues = SecretValue.objects.filter(userdevice=device)
     return render(request, 'web/secrets.html',
-            {'secrets': secrets})
+            {'secretvalues': secretvalues})
 
 @login_required
 def secret_create(request):
