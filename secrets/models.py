@@ -20,6 +20,7 @@ class SecretGroup(models.Model):
     label = models.CharField(max_length=100)
     users = models.ManyToManyField(settings.AUTH_USER_MODEL,
                                    related_name='secretgroups')
+    is_active = models.BooleanField(default=True)
 
     def __unicode__(self):
         return self.label
@@ -41,6 +42,7 @@ class Secret(models.Model):
     label = models.CharField(max_length=100)
     groups = models.ManyToManyField('SecretGroup')
     created = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
 
     def __unicode__(self):
         return self.label

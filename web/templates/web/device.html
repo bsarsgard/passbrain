@@ -28,38 +28,79 @@
 {# no public key, need to generate one first #}
 <div class="row">
   <div class="col-md-12">
-    <div class="box box-primary">
-      <div class="box-header with-border"><h3 class="box-title">Generate key</h3></div>
-      <form action="{% url 'device' %}" method="post" role="form" class="form-horizontal">
-        {% csrf_token %}
-        <div class="box-body">
-        {% if error_message %}<p class="help-block"><strong>{{ error_message }}</strong></p>{% endif %}
-          {% for field in form %}
-          <div class="form-group{% if field.errors %} has-error{% endif %}">
-            <label for="{{ field.id_for_label }}" class="col-sm-2 control-label">{% if field.errors %}<i class="fa fa-times-circle-o"></i> {% endif %}{{ field.label }}</label>
-            <div class="col-sm-10">
-              {{ field }}
-              {% for error in  field.errors %}
-              <span class="help-block">{{ error }}</span>
-              {% endfor %}
+    <div class="box box-solid">
+      <div class="box-header with-border"><h3 class="box-title">Device Setup</h3></div>
+      <div class="box-body">
+        <div id="device-setup-accordion" class="box-group">
+          <div class="panel box box-primary">
+            <div class="box-header with-border"><h4 class="box-title"><a href="#collapse-generate" data-toggle="collapse" data-parent="device-setup-accordion">Generate New Key</a></h4></div>
+            <div id="collapse-generate" class="panel-collapse collapse">
+              <div class="box-body">
+                <p><button id="generate-key" class="btn btn-success btn-block">Click to Generate Key</button></p>
+                <form action="{% url 'device' %}" method="post" role="form" class="form-horizontal">
+                  {% csrf_token %}
+                  {% if error_message %}<p class="help-block"><strong>{{ error_message }}</strong></p>{% endif %}
+                  {% for field in form %}
+                  <div class="form-group{% if field.errors %} has-error{% endif %}">
+                    <label for="{{ field.id_for_label }}" class="col-sm-2 control-label">{% if field.errors %}<i class="fa fa-times-circle-o"></i> {% endif %}{{ field.label }}</label>
+                    <div class="col-sm-10">
+                      {{ field }}
+                      {% for error in  field.errors %}
+                      <span class="help-block">{{ error }}</span>
+                      {% endfor %}
+                    </div>
+                  </div>
+                  {% endfor %}
+                  <div class="box-footer">
+                    <input type="submit" value="Submit" id="submit" class="btn btn-primary" />
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
-          {% endfor %}
-          <div class="box-footer">
-            <input type="submit" value="Submit" id="submit" class="btn btn-primary" />
+          <div class="panel box box-primary">
+            <div class="box-header with-border"><h4 class="box-title"><a href="#collapse-recover" data-toggle="collapse" data-parent="device-setup-accordion">Recover a Device</a></h4></div>
+            <div id="collapse-recover" class="panel-collapse collapse">
+              <div class="box-body">
+                <p>If your key is intact, it will be displayed here. If this is blank, please locate your backup key file and paste it here. Once a key is present, click "Recover Device".</p>
+                <div class="row">
+                  <div class="col-md-10">
+                    <textarea id="private-key" class="form-control" rows="15"></textarea>
+                  </div>
+                  <div class="col-md-2">
+                    <button id="recover-device" class="btn btn-success">Recover Device</button></p>
+                  </div>
+                </div>
+              </div>
+              <div class="overlay" style="display: none" id="spinner">
+                <i class="fa fa-refresh fa-spin"></i>
+              </div>
+            </div>
           </div>
         </div>
-      </form>
+      </div>
     </div>
   </div>
 </div>
 {% else %}
-{# device is good, just saying hello I guess #}
-<div class="container">
-  <div class="row">
-    <div class="panel panel-default">
-      <div class="panel-heading"><h1>{{ device.id }}</h1></div>
-      <div class="panel-body">
+{# device is good, allow recovery download #}
+<div class="row">
+  <div class="col-md-12">
+    <div class="box box-default">
+      <div class="box-header with-border"><h4>Create Recovery</h4></div>
+      <div class="box-body">
+        <p>Download your key or copy and paste it to a secure location.</p>
+        <div class="row">
+          <div class="col-md-10">
+            <textarea id="private-key" class="form-control" rows="15">[ hidden ]</textarea>
+          </div>
+          <div class="col-md-2">
+            <div class="btn-group-vertical">
+              <button id="show-key" class="btn btn-primary">Show Key</button>
+              <a href="#" id="download-key" class="btn btn-primary">Download Key</a>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -69,7 +110,7 @@
 {% block scripts %}
 <script src="/static/js/jsencrypt.js"></script>
 <script type="text/javascript">
-var generateKeys = function () {
+function generateKeys() {
   var keySize = 1024;
   var crypt = new JSEncrypt({default_key_size: keySize});
   var dt = new Date();
@@ -88,12 +129,61 @@ var generateKeys = function () {
     $("input[type='submit']").prop("disabled", false);
   });
   return;
-};
+}
+function displayKey() {
+  $('#private-key').val(localStorage['pk_u{{ request.user.id }}']);
+}
+function checkDevices() {
+  $('#spinner').show();
+  $.ajax({
+    type: 'GET',
+    url: '/api/userdevices/',
+    dataType: 'json',
+    success: function(data, status, jqXHR) {
+      var i = data.results.length, userdevice;
+      while (i--) {
+        userdevice = data.results[i];
+        // test this key
+        var rsa = new JSEncrypt();
+
+        // Set the private.
+        rsa.setPrivateKey($('#private-key').val());
+        if (userdevice.public_key.replace(/(\r\n|\n|\r)/gm,"").trim() == rsa.getPublicKey().replace(/(\r\n|\n|\r)/gm,"").trim()) {
+          localStorage['pk_u{{ request.user.id }}'] = $('#private-key').val();
+          window.location.replace(userdevice.id);
+          return false;
+        }
+      }
+      $('#spinner').hide();
+      alert('No matching device found');
+    },
+    error: function(jqXHR, status) {
+      $('#spinner').hide();
+      alert('failed to look up device');
+    }
+  });
+}
 $(function() {
-  if ($('#{{ form.public_key.id_for_label }}').val().length == 0) {
-    $("input[type='submit']").prop("disabled", true);
-    generateKeys();
+  {% if not device %}
+  /* key generation */
+  $('#generate-key').click(function() {
+    if ($('#{{ form.public_key.id_for_label }}').val().length == 0) {
+      $("input[type='submit']").prop("disabled", true);
+      generateKeys();
+    }
+  });
+  if (localStorage['pk_u{{ request.user.id }}'] !== null) {
+    $('#private-key').val(localStorage['pk_u{{ request.user.id }}']);
   }
+  $('#recover-device').click(checkDevices);
+  {% elif device.is_authorized %}
+  /* key download */
+  $('#show-key').click(function() {
+    displayKey();
+  });
+  $('#download-key').attr('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(localStorage['pk_u{{ request.user.id }}']));
+  $('#download-key').attr('download', 'pb_{{ request.user.email }}.key');
+  {% endif %}
 });
 </script>
 {% endblock %}

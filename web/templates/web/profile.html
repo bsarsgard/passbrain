@@ -137,6 +137,7 @@
                   </td>
                   <td>
                     {% if userdevice.id == device.id %}
+                    <a href="/device/" class="btn btn-xs btn-primary">Create Recovery</a>
                     {% elif not userdevice.is_active %}
                     {% elif not userdevice.is_authorized %}
                     <a href="#" class="btn btn-xs btn-primary device-authorize" data-device-id="{{ userdevice.id }}">Authorize</a>

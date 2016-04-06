@@ -61,12 +61,13 @@ def device(request):
         if form.is_valid():
             device = UserDevice(user=request.user,
                     agent=request.META.get('HTTP_USER_AGENT', ''),
+                    ip_address = request.META.get('REMOTE_ADDR', ''),
                     name=form.cleaned_data['name'],
                     public_key=form.cleaned_data['public_key'],
                     is_active=True)
             if UserDevice.objects.filter(user=request.user,
                     is_active=True).exists() or\
-                    SecretGroup.objects.filter(user=request.user,
+                    SecretGroup.objects.filter(users=request.user,
                     is_active=True).exists():
                 # they could have passwords already; need to manually auth
                 device.is_authorized = False
@@ -83,13 +84,26 @@ def device(request):
     else:
         try:
             device = UserDevice.objects.get(user=request.user,
-                    agent=request.META.get('HTTP_USER_AGENT', ''),
+                    pk=request.COOKIES.get('device_id', 0),
                     is_active=True)
         except:
             device = None
         form = UserDeviceForm()
         return render(request, 'web/device.html',
                 {'form': form, 'device': device})
+
+
+@login_required
+def device_read(request, device_id):
+    try:
+        device = UserDevice.objects.get(user=request.user,
+                pk=device_id,
+                is_active=True)
+        response = redirect('profile')
+        response.set_cookie('device_id', device.id, max_age=365*24*60*60)
+        return response
+    except:
+        return redirect('device')
 
 
 @login_required
