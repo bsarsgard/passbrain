@@ -12,10 +12,16 @@ class UserDevice(models.Model):
     is_authorized = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
 
+    def __unicode__(self):
+        return "%s: %s" % (self.user.__unicode__(), self.name)
+
 class SecretGroup(models.Model):
     label = models.CharField(max_length=100)
     users = models.ManyToManyField(settings.AUTH_USER_MODEL,
                                    related_name='secretgroups')
+
+    def __unicode__(self):
+        return self.label
 
 class SecretValue(models.Model):
     secret = models.ForeignKey('Secret', related_name='values')
@@ -26,7 +32,14 @@ class SecretValue(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
 
+    def __unicode__(self):
+        return "%s (%s)" % (self.secret.__unicode__(),
+                self.userdevice.__unicode__())
+
 class Secret(models.Model):
     label = models.CharField(max_length=100)
     groups = models.ManyToManyField('SecretGroup')
     created = models.DateTimeField(auto_now_add=True)
+
+    def __unicode__(self):
+        return self.label

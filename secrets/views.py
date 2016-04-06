@@ -11,6 +11,7 @@ from rest_framework.reverse import reverse
 
 from .models import UserDevice
 from .models import Secret
+from .models import SecretGroup
 from .models import SecretValue
 from .permissions import IsUserOrReadOnly
 from .serializers import UserDeviceSerializer
@@ -50,6 +51,7 @@ class SecretViewSet(viewsets.ModelViewSet):
     queryset = Secret.objects.all()
     serializer_class = SecretSerializer
     permission_class = (permissions.IsAuthenticatedOrReadOnly)
+
 
 class SecretValueViewSet(viewsets.ModelViewSet):
     queryset = SecretValue.objects.all()
