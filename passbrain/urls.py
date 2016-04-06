@@ -15,11 +15,17 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
+from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django.views.generic.edit import CreateView
 from rest_framework import routers, serializers, viewsets
 
 urlpatterns = [
     url(r'^', include('web.urls')),
+    url(r'^register/', CreateView.as_view(
+            template_name='registration/register.html',
+            form_class=UserCreationForm,
+            success_url='/dashboard'), name='register'),
     url(r'^accounts/', include('django.contrib.auth.urls')),
     url(r'^api/', include('secrets.urls')),
     url(r'^api-auth/', include('rest_framework.urls',

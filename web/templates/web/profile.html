@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content-header %}
+<h1>
+  Profile
+  <small>User Settings and Information</small>
+</h1>
+<ol class="breadcrumb">
+  <li><a href="/"><i class="fa fa-dashboard"></i> Home</a></li>
+  <li class="active">Profile</li>
+</ol>
+{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-md-3">
+
+    <!-- Profile Image -->
+    <div class="box box-primary">
+      <div class="box-body box-profile">
+        <img class="profile-user-img img-responsive img-circle" src="{% static "dist/img/user4-128x128.jpg" %}" alt="User profile picture">
+        <h3 class="profile-username text-center">Nina Mcintire</h3>
+        <p class="text-muted text-center">Software Engineer</p>
+
+        <ul class="list-group list-group-unbordered">
+          <li class="list-group-item">
+            <b>Followers</b> <a class="pull-right">1,322</a>
+          </li>
+          <li class="list-group-item">
+            <b>Following</b> <a class="pull-right">543</a>
+          </li>
+          <li class="list-group-item">
+            <b>Friends</b> <a class="pull-right">13,287</a>
+          </li>
+        </ul>
+
+        <a href="#" class="btn btn-primary btn-block"><b>Follow</b></a>
+      </div><!-- /.box-body -->
+    </div><!-- /.box -->
+
+    <!-- About Me Box -->
+    <div class="box box-primary">
+      <div class="box-header with-border">
+        <h3 class="box-title">About Me</h3>
+      </div><!-- /.box-header -->
+      <div class="box-body">
+        <strong><i class="fa fa-book margin-r-5"></i>  Education</strong>
+        <p class="text-muted">
+          B.S. in Computer Science from the University of Tennessee at Knoxville
+        </p>
+
+        <hr>
+
+        <strong><i class="fa fa-map-marker margin-r-5"></i> Location</strong>
+        <p class="text-muted">Malibu, California</p>
+
+        <hr>
+
+        <strong><i class="fa fa-pencil margin-r-5"></i> Skills</strong>
+        <p>
+          <span class="label label-danger">UI Design</span>
+          <span class="label label-success">Coding</span>
+          <span class="label label-info">Javascript</span>
+          <span class="label label-warning">PHP</span>
+          <span class="label label-primary">Node.js</span>
+        </p>
+
+        <hr>
+
+        <strong><i class="fa fa-file-text-o margin-r-5"></i> Notes</strong>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam fermentum enim neque.</p>
+      </div><!-- /.box-body -->
+    </div><!-- /.box -->
+  </div><!-- /.col -->
+
+  <div class="col-md-9">
+    <div class="nav-tabs-custom">
+      <ul class="nav nav-tabs">
+        <li class="active"><a href="#settings" data-toggle="tab">Settings</a></li>
+        <li><a href="#devices" data-toggle="tab">Devices</a></li>
+      </ul>
+      <div class="tab-content">
+        <div class="active tab-pane" id="settings">
+          <form class="form-horizontal">
+            <div class="form-group">
+              <label for="first_name" class="col-sm-2 control-label">First Name</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" id="first_name" placeholder="First Name">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="last_name" class="col-sm-2 control-label">Last Name</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" id="last_name" placeholder="Last Name">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="email" class="col-sm-2 control-label">Email</label>
+              <div class="col-sm-10">
+                <input type="email" class="form-control" id="email" placeholder="Email">
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-sm-offset-2 col-sm-10">
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-sm-offset-2 col-sm-10">
+                <button type="submit" class="btn btn-danger">Submit</button>
+              </div>
+            </div>
+          </form>
+        </div><!-- /.tab-pane -->
+        <div class="tab-pane" id="devices">
+          <div class="box">
+            <table class="table table-bordered">
+              <tbody>
+                <tr>
+                  <th>Name</th>
+                  <th>Agent</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+                {% for userdevice in userdevices %}
+                <tr>
+                  <td>{{ userdevice.name }}</td>
+                  <td>{{ userdevice.agent }}</td>
+                  <td>
+                    {% if userdevice.id == device.id %}
+                    <span class="label label-info">Current</span>
+                    {% elif not userdevice.is_active %}
+                    <span class="label label-danger">Deleted</span>
+                    {% elif not userdevice.is_authorized %}
+                    <span class="label label-warning">Unauthorized</span>
+                    {% else %}
+                    <span class="label label-success">Active</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if userdevice.id == device.id %}
+                    {% elif not userdevice.is_active %}
+                    {% elif not userdevice.is_authorized %}
+                    <a href="#" class="btn btn-xs btn-primary device-authorize" data-device-id="{{ userdevice.id }}">Authorize</a>
+                    {% else %}
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <div class="overlay" style="display: none" id="device-spinner">
+              <i class="fa fa-refresh fa-spin"></i>
+            </div>
+          </div><!-- /.box -->
+        </div><!-- /.tab-pane -->
+      </div><!-- /.tab-content -->
+    </div><!-- /.nav-tabs-custom -->
+  </div><!-- /.col -->
+</div><!-- /.row -->
+{% endblock %}
+{% block scripts %}
+<script type="text/javascript" src="{% static "js/csrf.js" %}"></script>
+<script type="text/javascript">
+function ajaxQueue(step, deviceID) {
+  switch(step) {
+    case 'start':
+      $.ajax({
+        type: 'PATCH',
+        url: '/api/userdevices/' + deviceID + '/',
+        dataType: 'json',
+        data: {'is_authorized': true},
+        success: function(data, status, jqXHR) {
+          ajaxQueue('finish', deviceID);
+        },
+        error: function(jqXHR, status) {
+          alert('failed to authorize device');
+          ajaxQueue('fail', deviceID);
+        }
+      });
+      break;
+    case 'finish':
+      window.location.hash = '#nav-devices';
+      window.location.reload(true);
+      break;
+    case 'fail':
+      $("#device-spinner").hide();
+      break;
+    default:
+      alert('Queue error');
+      $("#device-spinner").hide();
+      break;
+  }
+}
+
+$(function() {
+  // Javascript to enable link to tab
+  var url = document.location.toString();
+  if (url.match('#nav-')) {
+        $('.nav-tabs a[href="#' + url.split('#nav-')[1] + '"]').tab('show');
+  } 
+
+  $('.device-authorize').click(function(e) {
+    $('#device-spinner').show();
+    ajaxQueue('start', $(this).data('device-id'));
+  });
+});
+</script>
+{% endblock %}
