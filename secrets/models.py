@@ -6,6 +6,7 @@ from django.db import models
 class UserDevice(models.Model):
     user = models.ForeignKey('auth.User', related_name='devices')
     agent = models.CharField(max_length=1024)
+    ip_address = models.GenericIPAddressField()
     name = models.CharField(max_length=100)
     public_key = models.TextField()
     created = models.DateTimeField(auto_now_add=True)

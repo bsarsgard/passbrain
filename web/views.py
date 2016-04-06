@@ -48,8 +48,10 @@ def sandbox(request, device):
 @ensure_csrf_cookie
 def profile(request, device):
     userdevices = UserDevice.objects.filter(user=request.user)
-    return render(request, 'web/profile.html',
+    response = render(request, 'web/profile.html',
             {'device': device, 'userdevices': userdevices})
+    response.set_cookie('device_id', device.id, max_age=365*24*60*60)
+    return response
 
 
 @login_required
@@ -72,7 +74,9 @@ def device(request):
                 # the first device authorizes "free"
                 device.is_authorized = True
             device.save()
-            return redirect('profile')
+            response = redirect('profile')
+            response.set_cookie('device_id', device.id, max_age=365*24*60*60)
+            return response
         device = None
         return render(request, 'web/device.html',
                 {'form': form, 'device': device})

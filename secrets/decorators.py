@@ -10,12 +10,18 @@ def device_required(function=None):
         def _view(request, *args, **kwargs):
             try:
                 device = UserDevice.objects.get(user=request.user,
-                        agent=request.META.get('HTTP_USER_AGENT', ''),
+                        id=request.COOKIES.get('userdevice_id', 0),
                         is_authorized=True,
                         is_active=True)
+            except:
+                device = None
+            if device:
+                device.agent = request.META.get('HTTP_USER_AGENT', '')
+                device.ip_address = request.META.get('REMOTE_ADDR', '')
+                device.save()
                 kwargs['device'] = device
                 return view_func(request, *args, **kwargs)
-            except:
+            else:
                 return redirect('device')
 
         _view.__name__ = view_func.__name__

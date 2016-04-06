@@ -120,6 +120,8 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
 }
 
+LOGIN_REDIRECT_URL = '/profile/'
+
 try:
     from local_settings import *
 except ImportError:
