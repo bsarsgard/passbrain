@@ -14,9 +14,11 @@ from .models import Secret
 from .models import SecretGroup
 from .models import SecretValue
 from .permissions import IsUserOrReadOnly
+from .permissions import ReadIfUserInUsers
 from .serializers import UserDeviceSerializer
 from .serializers import UserSerializer
 from .serializers import SecretSerializer
+from .serializers import SecretGroupSerializer
 from .serializers import SecretValueSerializer
 
 
@@ -40,8 +42,9 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
 class UserDeviceViewSet(viewsets.ModelViewSet):
     queryset = UserDevice.objects.all()
     serializer_class = UserDeviceSerializer
-    permission_class = (permissions.IsAuthenticatedOrReadOnly,
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,
             IsUserOrReadOnly,)
+    filter_fields = ('user',)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -50,11 +53,19 @@ class UserDeviceViewSet(viewsets.ModelViewSet):
 class SecretViewSet(viewsets.ModelViewSet):
     queryset = Secret.objects.all()
     serializer_class = SecretSerializer
-    permission_class = (permissions.IsAuthenticatedOrReadOnly)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
 
 class SecretValueViewSet(viewsets.ModelViewSet):
     queryset = SecretValue.objects.all()
     serializer_class = SecretValueSerializer
-    permission_class = (permissions.IsAuthenticatedOrReadOnly,
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,
             IsUserOrReadOnly,)
+
+class SecretGroupViewSet(viewsets.ModelViewSet):
+    queryset = SecretGroup.objects.all()
+    serializer_class = SecretGroupSerializer
+    permission_classes = (ReadIfUserInUsers,)
+
+    def get_queryset(self):
+        return SecretGroup.objects.filter(users=self.request.user)

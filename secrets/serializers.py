@@ -3,6 +3,7 @@ from rest_framework import serializers
 
 from .models import UserDevice
 from .models import Secret
+from .models import SecretGroup
 from .models import SecretValue
 
 
@@ -16,7 +17,8 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class UserDeviceSerializer(serializers.HyperlinkedModelSerializer):
-    user = serializers.ReadOnlyField(source='user.username')
+    user = serializers.HyperlinkedRelatedField(view_name='user-detail',
+            read_only=True)
 
     class Meta:
         model = UserDevice
@@ -25,9 +27,12 @@ class UserDeviceSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class SecretSerializer(serializers.HyperlinkedModelSerializer):
+    groups = serializers.HyperlinkedRelatedField(many=True,
+            view_name='secretgroup-detail', queryset=SecretGroup.objects.all())
+
     class Meta:
         model = Secret
-        fields = ('id', 'url', 'label',)
+        fields = ('id', 'url', 'label', 'groups')
 
 
 class SecretValueSerializer(serializers.HyperlinkedModelSerializer):
@@ -41,3 +46,12 @@ class SecretValueSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('id', 'url', 'encrypted_key', 'encrypted_iv',
                  'encrypted_value', 'created', 'is_active', 'secret',
                  'userdevice')
+
+
+class SecretGroupSerializer(serializers.HyperlinkedModelSerializer):
+    users = serializers.HyperlinkedRelatedField(many=True,
+            view_name='user-detail', read_only=True)
+
+    class Meta:
+        model = SecretGroup
+        fields = ('id', 'url', 'label', 'users')

@@ -12,7 +12,9 @@ from secrets.models import Secret
 from secrets.models import SecretGroup
 from secrets.models import SecretValue
 from secrets.models import UserDevice
-from .forms import UserDeviceForm, SecretForm
+from .forms import ProfileForm
+from .forms import SecretForm
+from .forms import UserDeviceForm
 
 
 """
@@ -47,9 +49,23 @@ def sandbox(request, device):
 @device_required
 @ensure_csrf_cookie
 def profile(request, device):
+    if not request.user.email:
+        request.user.email = request.user.username
+        request.user.save()
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect('profile')
+    else:
+        form = ProfileForm(instance=request.user)
     userdevices = UserDevice.objects.filter(user=request.user)
+    secrets = Secret.objects.filter(values__userdevice__user=request.user)
+    groups = SecretGroup.objects.filter(users=request.user)
+
     response = render(request, 'web/profile.html',
-            {'device': device, 'userdevices': userdevices})
+            {'form': form, 'device': device, 'userdevices': userdevices,
+            'secrets': secrets, 'groups': groups},)
     response.set_cookie('device_id', device.id, max_age=365*24*60*60)
     return response
 
@@ -142,11 +158,11 @@ def secret_create(request, device):
     except:
         return redirect('device')
     if request.method == 'POST':
-        form = SecretForm(request.POST)
+        form = SecretForm(request.POST, user=request.user)
         if form.is_valid():
             return redirect('secrets')
     else:
-        form = SecretForm()
+        form = SecretForm(user=request.user)
     return render(request, 'web/secret_create.html',
             {'form': form, 'device': device})
 

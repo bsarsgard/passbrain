@@ -14,3 +14,8 @@ class IsUserOrReadOnly(permissions.BasePermission):
 
         # Write permissions are only allowed to the user associated
         return obj.user == request.user
+
+
+class ReadIfUserInUsers(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return obj.users.filter(id=request.user.id).exists()

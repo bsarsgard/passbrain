@@ -1,4 +1,7 @@
 from django import forms
+from django.contrib.auth.models import User
+
+from secrets.models import SecretGroup
 
 class UserDeviceForm(forms.Form):
     name = forms.CharField(label='Device Name', max_length=100,
@@ -11,3 +14,21 @@ class SecretForm(forms.Form):
             widget=forms.TextInput(attrs={'class': 'form-control'}))
     value = forms.CharField(label='Value',
             widget=forms.Textarea(attrs={'class': 'form-control'}))
+    groups = forms.ModelMultipleChoiceField(label='Groups',
+            widget=forms.CheckboxSelectMultiple,
+            queryset=SecretGroup.objects.all())
+
+    def __init__(self, user, *args, **kwargs):
+        super(SecretForm, self).__init__(*args, **kwargs)
+        if user:
+            self.fields['groups'].queryset = SecretGroup.objects.filter(
+                    users=user)
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name']
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+        }
