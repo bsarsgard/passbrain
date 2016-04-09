@@ -137,12 +137,12 @@ function checkDevices() {
   $('#spinner').show();
   $.ajax({
     type: 'GET',
-    url: '/api/userdevices/',
+    url: '/api/userdevices/?user={{ request.user.id }}',
     dataType: 'json',
     success: function(data, status, jqXHR) {
-      var i = data.results.length, userdevice;
+      var i = data.length, userdevice;
       while (i--) {
-        userdevice = data.results[i];
+        userdevice = data[i];
         // test this key
         var rsa = new JSEncrypt();
 

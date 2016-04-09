@@ -10,49 +10,42 @@
 </ol>
 {% endblock %}
 {% block content %}
-<div class="container">
-  <div class="row">
-  <div class="panel panel-default">
-    <div class="panel-heading"><h1>Online RSA Key Generator</h1></div>
-    <div class="panel-body">
-      <div class="col-lg-12">
+<div class="row">
+  <div class="col-lg-12">
+    <div class="box box-default">
+      <div class="box-header"><h4 class="box-title">Manual encryption and decryption sandbox</h4></div>
+      <div class="box-body">
         <div class="row">
           <div class="col-lg-6">
             <label for="privkey">Private Key</label><br/>
             <small>
-              <textarea id="privkey" rows="15" style="width:100%"></textarea>
+              <textarea id="privkey" rows="15" class="form-control" readonly="readonly"></textarea>
             </small>
           </div>
           <div class="col-lg-6">
             <label for="pubkey">Public Key</label><br/>
-            <small><textarea id="pubkey" rows="15" style="width:100%" readonly="readonly">{{ device.public_key }}</textarea></small>
+            <small><textarea id="pubkey" rows="15" class="form-control" readonly="readonly">{{ device.public_key }}</textarea></small>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-lg-5">
+            <label for="input">Text to encrypt:</label><br/>
+            <textarea id="input" name="input" rows="4" class="form-control">This is a test!</textarea>
+          </div>
+          <div class="col-lg-2">
+            <label>&nbsp;</label><br/>
+            <button id="execute" class="btn btn-primary">Encrypt / Decrypt</button>
+          </div>
+          <div class="col-lg-5">
+            <label for="crypted">Encrypted:</label><br/>
+            <textarea id="crypted" name="crypted" class="form-control" rows="4"></textarea>
           </div>
         </div>
       </div>
     </div>
   </div>
 </div>
-<div class="row">
-  <div class="panel panel-default">
-    <div class="panel-heading"><h3>RSA Encryption Test</h3></div>
-    <div class="panel-body">
-      <div class="col-lg-5">
-        <label for="input">Text to encrypt:</label><br/>
-        <textarea id="input" name="input" style="width: 100%" rows="4">This is a test!</textarea>
-      </div>
-      <div class="col-lg-2">
-        <label>&nbsp;</label><br/>
-        <button id="execute" class="btn btn-primary">Encrypt / Decrypt</button>
-      </div>
-      <div class="col-lg-5">
-        <label for="crypted">Encrypted:</label><br/>
-        <textarea id="crypted" name="crypted" style="width: 100%" rows="4"></textarea>
-      </div>
-    </div>
-  </div>
-</div>
 
-</div>
 {% endblock %}
 {% block scripts %}
 <script src="/static/js/jsencrypt.js"></script>
@@ -92,7 +85,7 @@
       }
     });
 
-    $('#privkey').val(localStorage.privateKey);
+    $('#privkey').val(localStorage['pk_u{{ request.user.id }}']);
   });
 </script>
 {% endblock %}

@@ -135,13 +135,6 @@ def dashboard(request, device):
 @device_required
 @ensure_csrf_cookie
 def secrets(request, device):
-    try:
-        device = UserDevice.objects.get(user=request.user,
-                agent=request.META.get('HTTP_USER_AGENT', ''),
-                is_authorized=True,
-                is_active=True)
-    except:
-        return redirect('device')
     secretvalues = SecretValue.objects.filter(userdevice=device)
     return render(request, 'web/secrets.html',
             {'secretvalues': secretvalues, 'device': device})
