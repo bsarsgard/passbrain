@@ -143,13 +143,6 @@ def secrets(request, device):
 @login_required
 @device_required
 def secret_create(request, device):
-    try:
-        device = UserDevice.objects.get(user=request.user,
-                agent=request.META.get('HTTP_USER_AGENT', ''),
-                is_authorized=True,
-                is_active=True)
-    except:
-        return redirect('device')
     if request.method == 'POST':
         form = SecretForm(request.POST, user=request.user)
         if form.is_valid():
