@@ -54,4 +54,4 @@ class SecretGroupSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = SecretGroup
-        fields = ('id', 'url', 'label', 'users')
+        fields = ('id', 'url', 'label', 'users', 'is_default', 'is_hidden')

@@ -55,6 +55,9 @@ class SecretViewSet(viewsets.ModelViewSet):
     serializer_class = SecretSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
+    def get_queryset(self):
+        return Secret.objects.filter(groups__users=self.request.user)
+
 
 class SecretValueViewSet(viewsets.ModelViewSet):
     queryset = SecretValue.objects.all()
@@ -66,6 +69,7 @@ class SecretGroupViewSet(viewsets.ModelViewSet):
     queryset = SecretGroup.objects.all()
     serializer_class = SecretGroupSerializer
     permission_classes = (ReadIfUserInUsers,)
+    filter_fields = ('is_default',)
 
     def get_queryset(self):
         return SecretGroup.objects.filter(users=self.request.user)

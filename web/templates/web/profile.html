@@ -34,7 +34,9 @@
           <strong>Groups</strong>
           <p>
             {% for group in groups %}
+            {% if not group.is_hidden %}
             <span class="label label-success">{{ group }}</span>
+            {% endif %}
             {% endfor %}
           </p>
         </p>
@@ -124,22 +126,26 @@
 {% block scripts %}
 <script type="text/javascript" src="{% static "js/csrf.js" %}"></script>
 <script type="text/javascript">
-function ajaxQueue(step, deviceID) {
+function authorizeQueue(step, device, secrets) {
   switch(step) {
     case 'start':
       $.ajax({
         type: 'PATCH',
-        url: '/api/userdevices/' + deviceID + '/',
+        url: '/api/userdevices/' + device.id + '/',
         dataType: 'json',
         data: {'is_authorized': true},
         success: function(data, status, jqXHR) {
-          ajaxQueue('finish', deviceID);
+          ajaxQueue('get_secrets', data);
         },
         error: function(jqXHR, status) {
           alert('failed to authorize device');
           ajaxQueue('fail', deviceID);
         }
       });
+      break;
+    case 'get_secrets':
+      break;
+    case 'create_secretvalues':
       break;
     case 'finish':
       window.location.hash = '#nav-devices';
@@ -159,12 +165,12 @@ $(function() {
   // Javascript to enable link to tab
   var url = document.location.toString();
   if (url.match('#nav-')) {
-        $('.nav-tabs a[href="#' + url.split('#nav-')[1] + '"]').tab('show');
+    $('.nav-tabs a[href="#' + url.split('#nav-')[1] + '"]').tab('show');
   } 
 
   $('.device-authorize').click(function(e) {
     $('#device-spinner').show();
-    ajaxQueue('start', $(this).data('device-id'));
+    authorizeQueue('start', {'id': $(this).data('device-id')});
   });
 });
 </script>

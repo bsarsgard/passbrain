@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from django.conf import settings
 from django.db import models
 
@@ -20,6 +18,8 @@ class SecretGroup(models.Model):
     label = models.CharField(max_length=100)
     users = models.ManyToManyField(settings.AUTH_USER_MODEL,
                                    related_name='secretgroups')
+    is_default = models.BooleanField(default=False)
+    is_hidden = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
 
     def __unicode__(self):

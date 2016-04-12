@@ -80,15 +80,13 @@ def device(request):
                     ip_address = request.META.get('REMOTE_ADDR', ''),
                     name=form.cleaned_data['name'],
                     public_key=form.cleaned_data['public_key'],
-                    is_active=True)
-            if UserDevice.objects.filter(user=request.user,
-                    is_active=True).exists() or\
-                    SecretGroup.objects.filter(users=request.user,
-                    is_active=True).exists():
-                # they could have passwords already; need to manually auth
-                device.is_authorized = False
-            else:
-                # the first device authorizes "free"
+                    is_authorized=False, is_active=True)
+            if not UserDevice.objects.filter(user=request.user).exists():
+                # this is a new account; auto authorize and create self group
+                group = SecretGroup(label='Self', is_default=True,
+                        is_hidden=True, is_active=True)
+                group.save()
+                group.users.add(request.user)
                 device.is_authorized = True
             device.save()
             response = redirect('profile')
