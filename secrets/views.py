@@ -53,7 +53,7 @@ class UserDeviceViewSet(viewsets.ModelViewSet):
 class SecretViewSet(viewsets.ModelViewSet):
     queryset = Secret.objects.all()
     serializer_class = SecretSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (ReadIfUserInUsers,)
 
     def get_queryset(self):
         return Secret.objects.filter(groups__users=self.request.user)
@@ -69,7 +69,7 @@ class SecretGroupViewSet(viewsets.ModelViewSet):
     queryset = SecretGroup.objects.all()
     serializer_class = SecretGroupSerializer
     permission_classes = (ReadIfUserInUsers,)
-    filter_fields = ('is_default',)
+    filter_fields = ('is_default','is_hidden')
 
     def get_queryset(self):
         return SecretGroup.objects.filter(users=self.request.user)

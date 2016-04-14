@@ -59,6 +59,7 @@ def profile(request, device):
             return redirect('profile')
     else:
         form = ProfileForm(instance=request.user)
+
     userdevices = UserDevice.objects.filter(user=request.user)
     secrets = Secret.objects.filter(values__userdevice__user=request.user)
     groups = SecretGroup.objects.filter(users=request.user)
@@ -81,8 +82,10 @@ def device(request):
                     name=form.cleaned_data['name'],
                     public_key=form.cleaned_data['public_key'],
                     is_authorized=False, is_active=True)
-            if not UserDevice.objects.filter(user=request.user).exists():
-                # this is a new account; auto authorize and create self group
+            if not SecretGroup.objects.filter(users=request.user).exists():
+                # If there are no groups, we auto-authorize this record and
+                # create a self group. We can't do this if there are any groups
+                # because they might have secrets.
                 group = SecretGroup(label='Self', is_default=True,
                         is_hidden=True, is_active=True)
                 group.save()
@@ -141,12 +144,7 @@ def secrets(request, device):
 @login_required
 @device_required
 def secret_create(request, device):
-    if request.method == 'POST':
-        form = SecretForm(request.POST, user=request.user)
-        if form.is_valid():
-            return redirect('secrets')
-    else:
-        form = SecretForm(user=request.user)
+    form = SecretForm(user=request.user)
     return render(request, 'web/secret_create.html',
             {'form': form, 'device': device})
 
@@ -154,17 +152,10 @@ def secret_create(request, device):
 @login_required
 @device_required
 def secret_read(request, secret_id, device):
-    try:
-        device = UserDevice.objects.get(user=request.user,
-                agent=request.META.get('HTTP_USER_AGENT', ''),
-                is_authorized=True,
-                is_active=True)
-    except:
-        return redirect('device')
     secret = get_object_or_404(Secret, pk=secret_id)
-    secretvalue = SecretValue.objects.get(secret=secret,
+    secretvalue = SecretValue.objects.filter(secret=secret,
                 userdevice=device,
-                is_active=True)
+                is_active=True).order_by('-created')[0]
     return render(request, 'web/secret_read.html',
             {'secret': secret, 'device': device, 'secretvalue': secretvalue})
 
@@ -172,7 +163,15 @@ def secret_read(request, secret_id, device):
 @login_required
 @device_required
 def secret_update(request, secret_id, device):
-    return render(request, 'web/secret_update.html')
+    secret = get_object_or_404(Secret, pk=secret_id)
+    secretvalue = SecretValue.objects.filter(secret=secret,
+                userdevice=device,
+                is_active=True).order_by('-created')[0]
+    form = SecretForm(user=request.user, initial={'label': secret.label,
+            'value': '[ Decrypting, please wait ]'})
+    return render(request, 'web/secret_update.html',
+            {'form': form, 'secret': secret, 'device': device,
+                    'secretvalue': secretvalue})
 
 
 @login_required

@@ -29,10 +29,12 @@ class UserDeviceSerializer(serializers.HyperlinkedModelSerializer):
 class SecretSerializer(serializers.HyperlinkedModelSerializer):
     groups = serializers.HyperlinkedRelatedField(many=True,
             view_name='secretgroup-detail', queryset=SecretGroup.objects.all())
+    users = serializers.HyperlinkedRelatedField(many=True,
+            view_name='user-detail', queryset=User.objects.all())
 
     class Meta:
         model = Secret
-        fields = ('id', 'url', 'label', 'groups')
+        fields = ('id', 'url', 'label', 'groups', 'users')
 
 
 class SecretValueSerializer(serializers.HyperlinkedModelSerializer):

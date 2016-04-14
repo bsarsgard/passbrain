@@ -22,7 +22,9 @@ class SecretForm(forms.Form):
         super(SecretForm, self).__init__(*args, **kwargs)
         if user:
             self.fields['groups'].queryset = SecretGroup.objects.filter(
-                    users=user)
+                    users=user, is_hidden=False, is_active=True)
+            self.initial['groups'] = SecretGroup.objects.filter(users=user,
+                    is_default=True)
 
 class ProfileForm(forms.ModelForm):
     class Meta:
