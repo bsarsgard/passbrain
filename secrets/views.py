@@ -60,10 +60,11 @@ class SecretViewSet(viewsets.ModelViewSet):
 
 
 class SecretValueViewSet(viewsets.ModelViewSet):
-    queryset = SecretValue.objects.all()
+    queryset = SecretValue.objects.all().order_by('-created')
     serializer_class = SecretValueSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,
             IsUserOrReadOnly,)
+    filter_fields = ('secret','userdevice')
 
 class SecretGroupViewSet(viewsets.ModelViewSet):
     queryset = SecretGroup.objects.all()

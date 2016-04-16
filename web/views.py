@@ -136,9 +136,13 @@ def dashboard(request, device):
 @device_required
 @ensure_csrf_cookie
 def secrets(request, device):
-    secretvalues = SecretValue.objects.filter(userdevice=device)
+    secrets = Secret.objects.filter(groups__users=request.user)
+    """
+    secretvalues = SecretValue.objects.filter(userdevice=device,
+            secret__groups__users=request.user)
+    """
     return render(request, 'web/secrets.html',
-            {'secretvalues': secretvalues, 'device': device})
+            {'secrets': secrets, 'device': device})
 
 
 @login_required

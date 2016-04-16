@@ -30,7 +30,7 @@ class SecretSerializer(serializers.HyperlinkedModelSerializer):
     groups = serializers.HyperlinkedRelatedField(many=True,
             view_name='secretgroup-detail', queryset=SecretGroup.objects.all())
     users = serializers.HyperlinkedRelatedField(many=True,
-            view_name='user-detail', queryset=User.objects.all())
+            view_name='user-detail', read_only=True)
 
     class Meta:
         model = Secret
