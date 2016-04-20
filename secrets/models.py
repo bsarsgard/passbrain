@@ -21,13 +21,36 @@ class UserDevice(models.Model):
 
 
 """
+Trust - A collection of groups with set administrators
+"""
+class Trust(models.Model):
+    label = models.CharField(max_length=100)
+    users = models.ManyToManyField(settings.AUTH_USER_MODEL,
+            through='TrustUser', related_name='trusts')
+
+    def __unicode__(self):
+        return self.label
+
+
+class TrustUser(models.Model):
+    trust = models.ForeignKey('Trust')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    is_admin = models.BooleanField(default=False)
+
+
+"""
 SecretGroup - Secrets are shared between users via groups, or tracked
 internelly with special default and hidden groups. A secret that is linked to a
 user via a group will be trackable for updates, whereas an orphaned link will
 not be updated and should be hidden.
+Groups may be within trusts, or may be private groups between users. All users
+have a default 'Self' group that is hidden, and users sharing passwords
+between themselves directly can create hidden groups to do so.
+If a trust is specified, all admins will automatically be added to it.
 """
 class SecretGroup(models.Model):
     label = models.CharField(max_length=100)
+    trust = models.ForeignKey('Trust', null=True, blank=True)
     users = models.ManyToManyField(settings.AUTH_USER_MODEL,
                                    related_name='secretgroups')
     is_default = models.BooleanField(default=False)
@@ -36,6 +59,16 @@ class SecretGroup(models.Model):
 
     def __unicode__(self):
         return self.label
+
+    def get_status(self):
+        if not self.is_active:
+            return 'danger'
+        elif self.is_default:
+            return 'default'
+        elif self.is_hidden:
+            return 'warning'
+        else:
+            return 'primary'
 
 
 """

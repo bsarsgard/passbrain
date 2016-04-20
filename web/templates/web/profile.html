@@ -30,12 +30,22 @@
           </li>
         </ul>
 
+        {% if user.trusts %}
+        <p class="text-muted">
+          <strong>Trusts</strong>
+          <p>
+            {% for trust in user.trusts.all %}
+            <span class="label label-success">{{ trust }}</span>
+            {% endfor %}
+          </p>
+        </p>
+        {% endif %}
         <p class="text-muted">
           <strong>Groups</strong>
           <p>
             {% for group in groups %}
             {% if not group.is_hidden %}
-            <span class="label label-success">{{ group }}</span>
+            <span class="label label-{{ group.get_status }}">{{ group }}</span>
             {% endif %}
             {% endfor %}
           </p>

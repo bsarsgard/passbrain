@@ -256,6 +256,16 @@ scratch. This page gets rid of all links and provides the needed markup only.
                 <li><a href="/secrets">View All</a></li>
               </ul>
             </li>
+            {% if request.user.admin_trusts %}
+            <li class="treeiew">
+              <a href="#"><i class="fa fa-link"></i> <span>Trusts</span> <i class="fa fa-angle-left pull-right"></i></a>
+              <ul class="treeview-menu">
+                {% for trust in request.user.admin_trusts.all %}
+                <li><a href="/trust/{{ trust.id }}/">{{ trust.label }}</a></li>
+                {% endfor %}
+              </ul>
+            </li>
+            {% endif %}
           </ul><!-- /.sidebar-menu -->
         </section>
         <!-- /.sidebar -->
