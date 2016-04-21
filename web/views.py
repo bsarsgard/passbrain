@@ -11,6 +11,7 @@ from secrets.decorators import device_required
 from secrets.models import Secret
 from secrets.models import SecretGroup
 from secrets.models import SecretValue
+from secrets.models import Trust
 from secrets.models import UserDevice
 from .forms import ProfileForm
 from .forms import SecretForm
@@ -182,3 +183,11 @@ def secret_update(request, secret_id, device):
 @device_required
 def secret_delete(request, secret_id, device):
     return render(request, 'web/secret_delete.html')
+
+
+@login_required
+@device_required
+def trust_read(request, trust_id, device):
+    trust = get_object_or_404(Trust, pk=trust_id)
+    return render(request, 'web/trust_read.html',
+            {'trust': trust, 'device': device})

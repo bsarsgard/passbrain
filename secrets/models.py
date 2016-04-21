@@ -34,8 +34,12 @@ class Trust(models.Model):
 
 class TrustUser(models.Model):
     trust = models.ForeignKey('Trust')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,
+            related_name='trustusers')
     is_admin = models.BooleanField(default=False)
+
+    def get_status(self):
+        return 'success' if self.is_admin else 'primary'
 
 
 """
@@ -50,9 +54,10 @@ If a trust is specified, all admins will automatically be added to it.
 """
 class SecretGroup(models.Model):
     label = models.CharField(max_length=100)
-    trust = models.ForeignKey('Trust', null=True, blank=True)
+    trust = models.ForeignKey('Trust', null=True, blank=True,
+            related_name='secretgroups')
     users = models.ManyToManyField(settings.AUTH_USER_MODEL,
-                                   related_name='secretgroups')
+            related_name='secretgroups')
     is_default = models.BooleanField(default=False)
     is_hidden = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)

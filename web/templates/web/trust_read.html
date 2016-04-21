@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content-header %}
+<h1>
+  Trust
+  <small>{{ trust.label }}</small>
+</h1>
+<ol class="breadcrumb">
+  <li><a href="/"><i class="fa fa-group"></i> Trusts</a></li>
+  <li class="active">{{ trust.label }}</li>
+</ol>
+{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <div class="box box-primary">
+      <div class="box-header with-border"><h3 class="box-title">{{ trust.label }}</h3></div>
+    </div><!-- box -->
+  </div><!-- col -->
+</div><!-- row -->
+<div class="row">
+  <div class="col-xs-12">
+    <div class="box">
+      <div class="box-header">
+        <h3 class="box-title">Groups</h3>
+
+        <div class="box-tools">
+          <div class="input-group input-group-sm" style="width: 150px;">
+            <input name="table_search" class="form-control pull-right" placeholder="Search" type="text">
+
+            <div class="input-group-btn">
+              <button type="submit" class="btn btn-default"><i class="fa fa-search"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /.box-header -->
+      <div class="box-body table-responsive no-padding">
+        <table class="table table-hover">
+          <tbody><tr>
+            <th>Name</th>
+            <th>Users</th>
+            <th>Status</th>
+          </tr>
+          {% for group in trust.secretgroups.all %}
+          <tr>
+            <td>{{ group.label }}</td>
+            <td>
+              {% for user in group.users.all %}
+              <span class="label label-success">{{ user }}</span>
+              {% endfor%}
+            </td>
+            <td><span class="label label-success">Approved</span></td>
+          </tr>
+          {% endfor %}
+        </tbody></table>
+      </div>
+      <!-- /.box-body -->
+    </div>
+    <!-- /.box -->
+  </div>
+</div>
+{% endblock %}
