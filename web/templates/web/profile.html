@@ -115,8 +115,9 @@
                     <a href="/device/" class="btn btn-sm btn-primary">Create Recovery</a>
                     {% elif not userdevice.is_active %}
                     {% elif not userdevice.is_authorized %}
-                    <a href="#" class="btn btn-sm btn-primary device-authorize" data-device-id="{{ userdevice.id }}">Authorize</a>
+                    <a href="#" class="btn btn-sm btn-success device-authorize" data-device-id="{{ userdevice.id }}">Authorize</a>
                     {% else %}
+                    <a href="#" class="btn btn-sm btn-danger device-deauthorize" data-device-id="{{ userdevice.id }}">Deauthorize</a>
                     {% endif %}
                   </td>
                 </tr>
@@ -135,8 +136,12 @@
 {% endblock %}
 {% block scripts %}
 <script type="text/javascript" src="{% static "js/csrf.js" %}"></script>
+<script src="/static/js/jsencrypt.js"></script>
+<script src="/static/js/aes.js"></script>
+<script src="/static/js/secrets.js"></script>
+<script src="/static/js/csrf.js"></script>
 <script type="text/javascript">
-function authorizeQueue(step, device, secrets) {
+function authorizeQueue(step, device, secrets, secretvalue) {
   switch(step) {
     case 'start':
       $.ajax({
@@ -145,17 +150,120 @@ function authorizeQueue(step, device, secrets) {
         dataType: 'json',
         data: {'is_authorized': true},
         success: function(data, status, jqXHR) {
-          ajaxQueue('get_secrets', data);
+          authorizeQueue('get_secrets', data);
         },
         error: function(jqXHR, status) {
           alert('failed to authorize device');
-          ajaxQueue('fail', deviceID);
+          authorizeQueue('fail');
         }
       });
       break;
     case 'get_secrets':
+      $.ajax({
+        type: 'GET',
+        url: '/api/secrets/?user=' + {{ request.user.id }},
+        dataType: 'json',
+        success: function(data, status, jqXHR) {
+          authorizeQueue('get_secretvalues', device, data);
+        },
+        error: function(jqXHR, status) {
+          alert('failed to look up secrets');
+          authorizeQueue('fail');
+        }
+      });
       break;
-    case 'create_secretvalues':
+    case 'get_secretvalues':
+      if (secrets.length > 0) {
+        var secret = secrets.pop();
+        $.ajax({
+          type: 'GET',
+          url: '/api/secretvalues/?userdevice={{ device.id }}&secret=' + secret.id,
+          dataType: 'json',
+          success: function(data, status, jqXHR) {
+            secretvalue = data[0];
+            if (secretvalue !== null && secretvalue !== undefined) {
+              authorizeQueue('post_secretvalue', device, secrets, secretvalue);
+            } else {
+              // skip this for now, but should probably throw an error
+              // this is sort of an integrity fail, because it means this user
+              // has no value themselves for this secret
+              authorizeQueue('get_secretvalues', device, secrets);
+            }
+          },
+          error: function(jqXHR, status) {
+            alert('failed to look up secretvalue');
+            authorizeQueue('fail');
+          }
+        });
+      } else {
+        authorizeQueue('finish');
+      }
+      break;
+    case 'post_secretvalue':
+      // Then we post the value for each device, until all are done
+      var cipher = encryptSecret(
+        decryptSecret(
+          secretvalue.encrypted_value,localStorage['pk_u{{ request.user.id }}'],
+          secretvalue.encrypted_key,
+          secretvalue.encrypted_iv), device.public_key);
+
+      // add the secret
+      var newSecretvalue = {
+        'secret': secretvalue.secret,
+        'userdevice': device.url,
+        'encrypted_key': cipher.key,
+        'encrypted_iv': cipher.iv,
+        'encrypted_value': cipher.value,
+        'is_active': true
+      };
+      $.ajax({
+        type: 'POST',
+        url: '/api/secretvalues/',
+        data: newSecretvalue,
+        dataType: 'json',
+        success: function(data, status, jqXHR) {
+          if (secrets.length > 0) {
+            // still more secrets, repeat
+            authorizeQueue('get_secretvalues', device, secrets);
+          } else {
+            authorizeQueue('finish');
+          }
+        },
+        error: function(jqXHR, status) {
+          alert('failed to post secret value');
+          authorizeQueue('fail');
+        }
+      });
+      break;
+    case 'finish':
+      window.location.hash = '#nav-devices';
+      window.location.reload(true);
+      break;
+    case 'fail':
+      $("#device-spinner").hide();
+      break;
+    default:
+      alert('Queue error');
+      $("#device-spinner").hide();
+      break;
+  }
+}
+function deauthorizeQueue(step, device, secrets) {
+  switch(step) {
+    case 'start':
+      $.ajax({
+        type: 'PATCH',
+        url: '/api/userdevices/' + device.id + '/',
+        dataType: 'json',
+        data: {'is_authorized': false},
+        success: function(data, status, jqXHR) {
+          deauthorizeQueue('finish', data);
+        },
+        error: function(jqXHR, status) {
+          alert('failed to deauthorize device');
+          deauthorizeQueue('fail', deviceID);
+        }
+      });
       break;
     case 'finish':
       window.location.hash = '#nav-devices';
@@ -181,6 +289,10 @@ $(function() {
   $('.device-authorize').click(function(e) {
     $('#device-spinner').show();
     authorizeQueue('start', {'id': $(this).data('device-id')});
+  });
+  $('.device-deauthorize').click(function(e) {
+    $('#device-spinner').show();
+    deauthorizeQueue('start', {'id': $(this).data('device-id')});
   });
 });
 </script>

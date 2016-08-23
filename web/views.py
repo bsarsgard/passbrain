@@ -15,6 +15,8 @@ from secrets.models import Trust
 from secrets.models import UserDevice
 from .forms import ProfileForm
 from .forms import SecretForm
+from .forms import SecretGroupForm
+from .forms import TrustUserCreateForm
 from .forms import UserDeviceForm
 
 
@@ -137,7 +139,7 @@ def dashboard(request, device):
 @device_required
 @ensure_csrf_cookie
 def secrets(request, device):
-    secrets = Secret.objects.filter(groups__users=request.user)
+    secrets = Secret.objects.filter(groups__users=request.user).distinct()
     """
     secretvalues = SecretValue.objects.filter(userdevice=device,
             secret__groups__users=request.user)
@@ -191,3 +193,33 @@ def trust_read(request, trust_id, device):
     trust = get_object_or_404(Trust, pk=trust_id)
     return render(request, 'web/trust_read.html',
             {'trust': trust, 'device': device})
+
+
+@login_required
+@device_required
+def trust_group_create(request, trust_id, device):
+    trust = get_object_or_404(Trust, pk=trust_id)
+    if request.method == 'POST':
+        form = SecretGroupForm(trust=trust, data=request.POST, instance=None)
+        if form.is_valid():
+            secretgroup = form.save(commit=False)
+            secretgroup.trust = trust
+            secretgroup.save()
+            form.save_m2m()
+            return redirect('trust_read', trust_id=trust_id)
+    else:
+        form = SecretGroupForm(trust=trust)
+    return render(request, 'web/trust_group_create.html',
+            {'form': form, 'device': device})
+
+
+@login_required
+@device_required
+def trust_user_create(request, trust_id, device):
+    trust = get_object_or_404(Trust, pk=trust_id)
+    if request.method == 'POST':
+        form = TrustUserCreateForm(data=request.POST)
+    else:
+        form = TrustUserCreateForm()
+    return render(request, 'web/trust_user_create.html',
+            {'form': form, 'device': device})

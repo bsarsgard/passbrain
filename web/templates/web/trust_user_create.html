@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content-header %}
+<h1>
+  User
+  <small>Invite User</small>
+</h1>
+<ol class="breadcrumb">
+  <li><a href="/"><i class="fa fa-dashboard"></i> Home</a></li>
+  <li class="active">Trust</li>
+</ol>
+{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <div class="box box-primary">
+      <div class="box-header with-border"><h3 class="box-title">Invite User</h3></div>
+        <form class="form-horizontal" method="post" action="">
+        {% csrf_token %}
+        <div class="box-body">
+        {% if error_message %}<p class="help-block"><strong>{{ error_message }}</strong></p>{% endif %}
+          {% for field in form %}
+          <div class="form-group{% if field.errors %} has-error{% endif %}">
+            <label for="{{ field.id_for_label }}" class="col-sm-2 control-label">{% if field.errors %}<i class="fa fa-times-circle-o"></i> {% endif %}{{ field.label }}</label>
+            <div class="col-sm-10">
+              {{ field }}
+              {% for error in  field.errors %}
+              <span class="help-block">{{ error }}</span>
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="box-footer">
+          <button class="btn btn-primary" id="submit">Submit</button>
+        </div>
+      </form><!-- form -->
+    </div><!-- /.box -->
+  </div><!-- /.col -->
+</div><!-- /.row -->
+{% endblock %}
+{% block scripts %}
+{% endblock %}
