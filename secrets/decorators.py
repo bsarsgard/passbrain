@@ -10,7 +10,8 @@ def device_required(function=None):
         def _view(request, *args, **kwargs):
             try:
                 device = UserDevice.objects.get(user=request.user,
-                        pk=request.COOKIES.get('device_id', 0),
+                        pk=request.COOKIES.get(
+                            'device_id_%i' % request.user.id, 0),
                         is_authorized=True,
                         is_active=True)
             except:

@@ -12,8 +12,8 @@
           {% csrf_token %}
           {% if error_message %}<p class="help-block"><strong>{{ error_message }}</strong></p>{% endif %}
           <div class="form-group has-feedback{% if form.username.errors %} has-error{% endif %}">
-            <input type="email" name="username" class="form-control" placeholder="Email">
-            <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
+            <input type="text" name="username" class="form-control" placeholder="Username">
+            <span class="glyphicon glyphicon-user form-control-feedback"></span>
             {% for error in  form.username.errors %}
             <span class="help-block">{{ error }}</span>
             {% endfor %}

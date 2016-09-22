@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 
-from secrets.models import SecretGroup
+from secrets.models import SecretGroup, Trust, TrustUser
 
 
 class UserDeviceForm(forms.Form):
@@ -32,8 +32,9 @@ class SecretForm(forms.Form):
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name']
+        fields = ['id', 'email', 'first_name', 'last_name']
         widgets = {
+            'email': forms.TextInput(attrs={'class': 'form-control'}),
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
         }
@@ -54,6 +55,25 @@ class SecretGroupForm(forms.ModelForm):
             self.fields['users'].queryset = trust.users
 
 
+class TrustForm(forms.ModelForm):
+    class Meta:
+        model = Trust
+        fields = ['label']
+        widgets = {
+            'label': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+
 class TrustUserCreateForm(forms.Form):
     email = forms.CharField(label='Email addresses (one per line)',
             widget=forms.Textarea(attrs={'class': 'form-control'}))
+
+    def process(self, trust):
+        emails = self.cleaned_data['email']
+        for email in emails.split('\n'):
+            try:
+                user = User.objects.get(email=email)
+                trustuser = TrustUser(user=user, trust=trust)
+                trustuser.save()
+            except:
+                pass

@@ -97,6 +97,20 @@ class SecretValue(models.Model):
 
 
 """
+Message - A holder for a secret shared directly instead of using group access
+This is important since changing group access should never retroactively
+reveal or hide massages that were sent in the past.
+"""
+class SecretMessage(models.Model):
+    secret = models.ForeignKey('Secret')
+    sender = models.ForeignKey('auth.User')
+    recipients = models.ManyToManyField('auth.User', related_name='messages')
+
+    def __unicode__(self):
+        return self.secret.label
+
+
+"""
 Secret - Represents a secret entity which will be distributed among users and
 encrypted in their own SecretValue records (where the actual data is stored).
 """
@@ -112,3 +126,27 @@ class Secret(models.Model):
     @property
     def users(self):
         return User.objects.filter(secretgroups__secrets=self)
+
+
+"""
+Notification - notify users of changes or newly added items
+"""
+class Notification(models.Model):
+    MESSAGE = 'ME'
+    NOTIFICATION = 'NO'
+    ALERT = 'AL'
+    NOTIFICATION_TYPE_CHOICES = (
+        (MESSAGE, 'Message'),
+        (NOTIFICATION, 'Notification'),
+        (ALERT, 'Alert'),
+    )
+
+    user = models.ForeignKey('auth.User')
+    label = models.CharField(max_length=100)
+    icon = models.CharField(max_length=50)
+    relative_url = models.CharField(max_length=1024)
+    notification_type = models.CharField(max_length=2,
+        choices=NOTIFICATION_TYPE_CHOICES, default=NOTIFICATION)
+    created = models.DateTimeField(auto_now_add=True)
+    is_new = models.BooleanField(default=True)
+    is_done = models.BooleanField(default=True)

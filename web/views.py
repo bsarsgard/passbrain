@@ -12,10 +12,12 @@ from secrets.models import Secret
 from secrets.models import SecretGroup
 from secrets.models import SecretValue
 from secrets.models import Trust
+from secrets.models import TrustUser
 from secrets.models import UserDevice
 from .forms import ProfileForm
 from .forms import SecretForm
 from .forms import SecretGroupForm
+from .forms import TrustForm
 from .forms import TrustUserCreateForm
 from .forms import UserDeviceForm
 
@@ -52,9 +54,6 @@ def sandbox(request, device):
 @device_required
 @ensure_csrf_cookie
 def profile(request, device):
-    if not request.user.email:
-        request.user.email = request.user.username
-        request.user.save()
     if request.method == 'POST':
         form = ProfileForm(request.POST, instance=request.user)
         if form.is_valid():
@@ -68,9 +67,10 @@ def profile(request, device):
     groups = SecretGroup.objects.filter(users=request.user)
 
     response = render(request, 'web/profile.html',
-            {'form': form, 'device': device, 'userdevices': userdevices,
-            'secrets': secrets, 'groups': groups},)
-    response.set_cookie('device_id', device.id, max_age=365*24*60*60)
+        {'form': form, 'device': device, 'userdevices': userdevices,
+        'secrets': secrets, 'groups': groups},)
+    response.set_cookie('device_id_%i' % request.user.id, device.id,
+        max_age=365*24*60*60)
     return response
 
 
@@ -96,7 +96,8 @@ def device(request):
                 device.is_authorized = True
             device.save()
             response = redirect('profile')
-            response.set_cookie('device_id', device.id, max_age=365*24*60*60)
+            response.set_cookie('device_id_%i' % request.user.id, device.id,
+                max_age=365*24*60*60)
             return response
         device = None
         return render(request, 'web/device.html',
@@ -104,7 +105,7 @@ def device(request):
     else:
         try:
             device = UserDevice.objects.get(user=request.user,
-                    pk=request.COOKIES.get('device_id', 0),
+                    pk=request.COOKIES.get('device_id_%i' % request.user.id, 0),
                     is_active=True)
         except:
             device = None
@@ -120,7 +121,8 @@ def device_read(request, device_id):
                 pk=device_id,
                 is_active=True)
         response = redirect('profile')
-        response.set_cookie('device_id', device.id, max_age=365*24*60*60)
+        response.set_cookie('device_id_%i' % request.user.id, device.id,
+            max_age=365*24*60*60)
         return response
     except:
         return redirect('device')
@@ -189,6 +191,23 @@ def secret_delete(request, secret_id, device):
 
 @login_required
 @device_required
+def trust_create(request, device):
+    if request.method == 'POST':
+        form = TrustForm(data=request.POST, instance=None)
+        if form.is_valid():
+            trust = form.save()
+            trustuser = TrustUser(
+                trust=trust, user=request.user, is_admin=True)
+            trustuser.save()
+            return redirect('trust_read', trust_id=trust.id)
+    else:
+        form = TrustForm()
+    return render(request, 'web/trust_create.html',
+            {'form': form, 'device': device})
+
+
+@login_required
+@device_required
 def trust_read(request, trust_id, device):
     trust = get_object_or_404(Trust, pk=trust_id)
     return render(request, 'web/trust_read.html',
@@ -219,6 +238,9 @@ def trust_user_create(request, trust_id, device):
     trust = get_object_or_404(Trust, pk=trust_id)
     if request.method == 'POST':
         form = TrustUserCreateForm(data=request.POST)
+        if form.is_valid():
+            form.process(trust)
+            return redirect('trust_read', trust_id=trust_id)
     else:
         form = TrustUserCreateForm()
     return render(request, 'web/trust_user_create.html',

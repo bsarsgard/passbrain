@@ -19,6 +19,7 @@ urlpatterns = [
             name='secret_update'),
     url(r'^secret/(?P<secret_id>[0-9]+)/delete/$', views.secret_delete,
             name='secret_delete'),
+    url(r'^trust/$', views.trust_create, name='trust_create'),
     url(r'^trust/(?P<trust_id>[0-9]+)/$', views.trust_read,
             name='trust_read'),
     url(r'^trust/(?P<trust_id>[0-9]+)/group/$', views.trust_group_create,
